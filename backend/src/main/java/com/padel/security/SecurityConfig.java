@@ -29,33 +29,26 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Page d'accueil + erreur
+                .requestMatchers("/", "/error").permitAll()
+
                 // Endpoints publics (lecture)
                 .requestMatchers(HttpMethod.GET, "/api/sites/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/terrains/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/matches/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/membres/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/statistiques/**").permitAll()
+
+                // Exception : opérations de réservation/paiement sur matches (POST) : publiques
+                .requestMatchers(HttpMethod.POST, "/api/matches/**").permitAll()
 
                 // Endpoints d'auth
                 .requestMatchers("/api/auth/**").authenticated()
 
-                // Statistiques : réservé aux admins
-                .requestMatchers("/api/statistiques/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-
                 // Mutations (CRUD) : réservé aux admins
-                .requestMatchers(HttpMethod.POST, "/api/sites/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-                .requestMatchers(HttpMethod.PUT, "/api/sites/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-                .requestMatchers(HttpMethod.DELETE, "/api/sites/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-
-                .requestMatchers(HttpMethod.POST, "/api/terrains/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-                .requestMatchers(HttpMethod.PUT, "/api/terrains/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-                .requestMatchers(HttpMethod.DELETE, "/api/terrains/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-
-                .requestMatchers(HttpMethod.POST, "/api/membres/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-                .requestMatchers(HttpMethod.PUT, "/api/membres/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-                .requestMatchers(HttpMethod.DELETE, "/api/membres/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
-
-                // Opérations de réservation/paiement : publiques (règles gérées côté service)
-                .requestMatchers(HttpMethod.POST, "/api/matches/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
+                .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
+                .requestMatchers(HttpMethod.DELETE, "/api/**").hasAnyRole("ADMIN_GLOBAL", "ADMIN_SITE")
 
                 // H2 console (dev uniquement)
                 .requestMatchers("/h2-console/**").permitAll()

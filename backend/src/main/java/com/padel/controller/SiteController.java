@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/sites")
-@CrossOrigin(origins = "http://localhost:4200")
 public class SiteController {
     
     @Autowired

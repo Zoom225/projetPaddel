@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/terrains")
-@CrossOrigin(origins = "http://localhost:4200")
 public class TerrainController {
     
     @Autowired
