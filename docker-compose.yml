@@ -8,11 +8,34 @@ services:
       POSTGRES_DB: padelService
       POSTGRES_USER: padel
       POSTGRES_PASSWORD: padel
+      POSTGRES_INITDB_ARGS: "-c password_encryption=scram-sha-256"
     ports:
       - "5432:5432"
     volumes:
       - padelservice_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U padel -d padelService"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: padelservice-backend
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=padelService
+      - DB_USER=padel
+      - DB_PASSWORD=padel
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
 
 volumes:
   padelservice_data:

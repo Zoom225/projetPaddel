@@ -1,74 +1,53 @@
 package com.padel.controller;
 
-import com.padel.model.Site;
-import com.padel.model.Terrain;
-import com.padel.repository.SiteRepository;
-import com.padel.repository.TerrainRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import com.padel.entity.Terrain;
+import com.padel.service.TerrainService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/terrains")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class TerrainController {
-    
-    @Autowired
-    private TerrainRepository terrainRepository;
-
-    @Autowired
-    private SiteRepository siteRepository;
-
-    @GetMapping("/site/{siteId}")
-    public ResponseEntity<List<Terrain>> getTerrainsBySite(@PathVariable Long siteId) {
-        return ResponseEntity.ok(terrainRepository.findBySiteId(siteId));
-    }
+    private final TerrainService terrainService;
 
     @GetMapping
     public ResponseEntity<List<Terrain>> getAllTerrains() {
-        return ResponseEntity.ok(terrainRepository.findAll());
+        return ResponseEntity.ok(terrainService.getAllTerrains());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Terrain> getTerrainById(@PathVariable Long id) {
+        return terrainService.getTerrainById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/site/{siteId}")
+    public ResponseEntity<List<Terrain>> getTerrainsBySiteId(@PathVariable Long siteId) {
+        return ResponseEntity.ok(terrainService.getTerrainsBySiteId(siteId));
     }
 
     @PostMapping
-    public ResponseEntity<Terrain> createTerrain(@RequestBody Terrain terrain) {
-        if (terrain.getSite() == null || terrain.getSite().getId() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Optional<Site> site = siteRepository.findById(terrain.getSite().getId());
-        if (site.isEmpty()) return ResponseEntity.badRequest().build();
-
-        terrain.setId(null);
-        terrain.setSite(site.get());
-        Terrain created = terrainRepository.save(terrain);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<Terrain> createTerrain(@RequestBody Map<String, Object> payload) {
+        String nom = (String) payload.get("nom");
+        Integer siteIdInt = (Integer) ((Map<String, Object>) payload.get("site")).get("id");
+        Long siteId = siteIdInt.longValue();
+        return ResponseEntity.ok(terrainService.createTerrain(nom, siteId));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Terrain> updateTerrain(@PathVariable Long id, @RequestBody Terrain terrain) {
-        Optional<Terrain> existingOpt = terrainRepository.findById(id);
-        if (existingOpt.isEmpty()) return ResponseEntity.notFound().build();
-
-        Terrain existing = existingOpt.get();
-        existing.setNom(terrain.getNom());
-
-        // Changement de site optionnel
-        if (terrain.getSite() != null && terrain.getSite().getId() != null) {
-            Optional<Site> site = siteRepository.findById(terrain.getSite().getId());
-            if (site.isEmpty()) return ResponseEntity.badRequest().build();
-            existing.setSite(site.get());
-        }
-
-        return ResponseEntity.ok(terrainRepository.save(existing));
+    public ResponseEntity<Terrain> updateTerrain(@PathVariable Long id, @RequestBody Terrain terrainDetails) {
+        return ResponseEntity.ok(terrainService.updateTerrain(id, terrainDetails));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTerrain(@PathVariable Long id) {
-        if (!terrainRepository.existsById(id)) return ResponseEntity.notFound().build();
-        terrainRepository.deleteById(id);
+        terrainService.deleteTerrain(id);
         return ResponseEntity.noContent().build();
     }
 }
-

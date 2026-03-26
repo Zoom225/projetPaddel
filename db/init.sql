@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS administrateurs (
   CONSTRAINT chk_admin_site CHECK (
     (type_administrateur = 'GLOBAL' AND site_id IS NULL) OR
     (type_administrateur = 'SITE' AND site_id IS NOT NULL)
-  )
+  ),
+  CONSTRAINT chk_type_administrateur CHECK (type_administrateur IN ('GLOBAL', 'SITE'))
 );
 
 -- 5. Table MEMBRES (Utilisateurs sans Login, par Matricule)
@@ -61,7 +62,8 @@ CREATE TABLE IF NOT EXISTS membres (
   CONSTRAINT chk_membre_site CHECK (
     (type_membre IN ('GLOBAL', 'LIBRE') AND site_id IS NULL) OR
     (type_membre = 'SITE' AND site_id IS NOT NULL)
-  )
+  ),
+  CONSTRAINT chk_type_membre CHECK (type_membre IN ('GLOBAL', 'SITE', 'LIBRE'))
 );
 
 -- 6. Table MATCHES
@@ -71,14 +73,15 @@ CREATE TABLE IF NOT EXISTS matches (
   date DATE NOT NULL,
   heure_debut TIME NOT NULL,
   heure_fin TIME NOT NULL,
-  type_match VARCHAR(32) NOT NULL, -- 'PRIVE', 'PUBLIC', 'OFFICIEL'
+  type_match VARCHAR(32) NOT NULL, -- 'PRIVE', 'PUBLIC'
   organisateur_id BIGINT NOT NULL REFERENCES membres(id) ON DELETE CASCADE,
   prix_total DOUBLE PRECISION NOT NULL DEFAULT 60,
   prix_par_joueur DOUBLE PRECISION NOT NULL DEFAULT 15,
   est_complet BOOLEAN NOT NULL DEFAULT FALSE,
   est_paye BOOLEAN NOT NULL DEFAULT FALSE,
   date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  date_conversion_public TIMESTAMP NULL
+  date_conversion_public TIMESTAMP NULL,
+  CONSTRAINT chk_type_match CHECK (type_match IN ('PRIVE', 'PUBLIC'))
 );
 
 -- 7. Table MATCH_JOUEURS (Table de jointure Match <-> Membres)

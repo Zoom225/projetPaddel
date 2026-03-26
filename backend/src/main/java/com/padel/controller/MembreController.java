@@ -1,21 +1,18 @@
 package com.padel.controller;
 
-import com.padel.model.Membre;
+import com.padel.entity.Membre;
 import com.padel.service.MembreService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/membres")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class MembreController {
-    
-    @Autowired
-    private MembreService membreService;
+    private final MembreService membreService;
 
     @GetMapping
     public ResponseEntity<List<Membre>> getAllMembres() {
@@ -24,46 +21,44 @@ public class MembreController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Membre> getMembreById(@PathVariable Long id) {
-        Optional<Membre> membre = membreService.getMembreById(id);
-        return membre.map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+        return membreService.getMembreById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/matricule/{matricule}")
     public ResponseEntity<Membre> getMembreByMatricule(@PathVariable String matricule) {
-        Optional<Membre> membre = membreService.getMembreByMatricule(matricule);
-        return membre.map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+        return membreService.getMembreByMatricule(matricule)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Membre> getMembreByEmail(@PathVariable String email) {
+        return membreService.getMembreByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/site/{siteId}")
+    public ResponseEntity<List<Membre>> getMembresBySiteId(@PathVariable Long siteId) {
+        return ResponseEntity.ok(membreService.getMembresBySiteId(siteId));
     }
 
     @PostMapping
     public ResponseEntity<Membre> createMembre(@RequestBody Membre membre) {
-        try {
-            Membre created = membreService.createMembre(membre);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(membreService.createMembre(membre));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Membre> updateMembre(@PathVariable Long id, @RequestBody Membre membre) {
-        try {
-            Membre updated = membreService.updateMembre(id, membre);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Membre> updateMembre(@PathVariable Long id, @RequestBody Membre membreDetails) {
+        return ResponseEntity.ok(membreService.updateMembre(id, membreDetails));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMembre(@PathVariable Long id) {
-        try {
-            membreService.deleteMembre(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        membreService.deleteMembre(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

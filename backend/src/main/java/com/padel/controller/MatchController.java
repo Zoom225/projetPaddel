@@ -1,26 +1,23 @@
 package com.padel.controller;
 
-import com.padel.model.Match;
-import com.padel.model.Paiement;
-import com.padel.model.TypeMatch;
+import com.padel.entity.Match;
+import com.padel.entity.Paiement;
 import com.padel.service.MatchService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
+import com.padel.service.PaiementService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/matches")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class MatchController {
-    
-    @Autowired
-    private MatchService matchService;
+    private final MatchService matchService;
+    private final PaiementService paiementService;
 
     @GetMapping
     public ResponseEntity<List<Match>> getAllMatches() {
@@ -29,73 +26,50 @@ public class MatchController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Match> getMatchById(@PathVariable Long id) {
-        Optional<Match> match = matchService.getMatchById(id);
-        return match.map(ResponseEntity::ok)
-                   .orElse(ResponseEntity.notFound().build());
+        return matchService.getMatchById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/site/{siteId}")
-    public ResponseEntity<List<Match>> getMatchesBySite(@PathVariable Long siteId) {
-        return ResponseEntity.ok(matchService.getMatchesBySite(siteId));
+    @GetMapping("/terrain/{terrainId}")
+    public ResponseEntity<List<Match>> getMatchesByTerrainId(@PathVariable Long terrainId) {
+        return ResponseEntity.ok(matchService.getMatchesByTerrainId(terrainId));
     }
 
-    @GetMapping("/public")
-    public ResponseEntity<List<Match>> getPublicMatches() {
-        return ResponseEntity.ok(matchService.getPublicMatches());
+    @GetMapping("/date/{date}")
+    public ResponseEntity<List<Match>> getMatchesByDate(@PathVariable String date) {
+        return ResponseEntity.ok(matchService.getMatchesByDate(LocalDate.parse(date)));
     }
 
-    @GetMapping("/public/from-date")
-    public ResponseEntity<List<Match>> getPublicMatchesFromDate(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ResponseEntity.ok(matchService.getPublicMatchesFromDate(date));
-    }
-
-    @GetMapping("/membre/{matricule}")
-    public ResponseEntity<List<Match>> getMatchesByMembre(@PathVariable String matricule) {
-        try {
-            return ResponseEntity.ok(matchService.getMatchesByMembre(matricule));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    @GetMapping("/type/{type}")
+    public ResponseEntity<List<Match>> getMatchesByType(@PathVariable String type) {
+        return ResponseEntity.ok(matchService.getMatchesByType(Match.TypeMatch.valueOf(type)));
     }
 
     @PostMapping
-    public ResponseEntity<Match> createMatch(
-            @RequestParam String matriculeOrganisateur,
-            @RequestParam Long terrainId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime heureDebut,
-            @RequestParam TypeMatch typeMatch) {
-        try {
-            Match match = matchService.createMatch(matriculeOrganisateur, terrainId, date, heureDebut, typeMatch);
-            return ResponseEntity.status(HttpStatus.CREATED).body(match);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Match> createMatch(@RequestParam String matriculeOrganisateur,
+                                           @RequestParam Long terrainId,
+                                           @RequestParam String date,
+                                           @RequestParam String heureDebut,
+                                           @RequestParam String typeMatch) {
+        Match match = matchService.createMatch(matriculeOrganisateur, terrainId, LocalDate.parse(date), LocalTime.parse(heureDebut), Match.TypeMatch.valueOf(typeMatch));
+        return ResponseEntity.ok(match);
     }
 
-    @PostMapping("/{matchId}/joueurs")
-    public ResponseEntity<Match> ajouterJoueurMatchPrive(
-            @PathVariable Long matchId,
-            @RequestParam String matriculeJoueur) {
-        try {
-            Match match = matchService.ajouterJoueurMatchPrive(matchId, matriculeJoueur);
-            return ResponseEntity.ok(match);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<Match> updateMatch(@PathVariable Long id, @RequestBody Match matchDetails) {
+        return ResponseEntity.ok(matchService.updateMatch(id, matchDetails));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMatch(@PathVariable Long id) {
+        matchService.deleteMatch(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{matchId}/paiement")
-    public ResponseEntity<Paiement> effectuerPaiement(
-            @PathVariable Long matchId,
-            @RequestParam String matricule) {
-        try {
-            Paiement paiement = matchService.effectuerPaiement(matchId, matricule);
-            return ResponseEntity.status(HttpStatus.CREATED).body(paiement);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Paiement> payer(@PathVariable Long matchId, @RequestParam String matricule) {
+        Paiement paiement = paiementService.createPaiement(matchId, matricule);
+        return ResponseEntity.ok(paiement);
     }
 }
-

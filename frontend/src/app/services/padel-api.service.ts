@@ -91,9 +91,10 @@ export class PadelApiService {
     return this.http.post<Match>(`${this.baseUrl}/matches`, null, { params });
   }
 
-  payer(matchId: number, matricule: string): Observable<Paiement> {
+  // Paiements - TODO: à implémenter
+  payer(matchId: number, matricule: string): Observable<any> {
     const params = new HttpParams().set('matricule', matricule);
-    return this.http.post<Paiement>(`${this.baseUrl}/matches/${matchId}/paiement`, null, { params });
+    return this.http.post<any>(`${this.baseUrl}/matches/${matchId}/paiement`, null, { params });
   }
 
   // Admin - stats

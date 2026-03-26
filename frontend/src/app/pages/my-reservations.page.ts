@@ -8,63 +8,216 @@ import { Match, Site, Terrain } from '../services/api';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <h2>Mes réservations (par matricule)</h2>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+      <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-gray-800 mb-2">🎾 Mes Réservations</h1>
+          <p class="text-gray-600">Gérez vos matchs de padel et vos paiements</p>
+        </div>
 
-    <div class="grid grid-2">
-      <div class="card">
-        <h3>1) Voir mes matches</h3>
-        <label>Matricule (ex: G0001, S00001, L00001)</label>
-        <input [(ngModel)]="matricule" placeholder="Entrez votre matricule"/>
-        <button class="btn" style="margin-top:12px" (click)="loadMyMatches()">Rechercher</button>
-        <div *ngIf="error" class="error" style="margin-top:12px">{{ error }}</div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- LEFT SECTION: Voir mes matches -->
+          <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                  <span>📋</span> Voir mes matchs
+                </h2>
+                <p class="text-blue-100 mt-1 text-sm">Consultez tous vos matchs réservés</p>
+              </div>
 
-        <div style="margin-top:16px" *ngIf="myMatches.length">
-          <div class="card" style="margin-bottom:12px" *ngFor="let m of myMatches">
-            <strong>{{ m.terrain?.site?.nom }}</strong> — {{ m.terrain?.nom }}
-            <div style="color:#666">{{ m.date }} · {{ m.heureDebut }} - {{ m.heureFin }} · {{ m.typeMatch }}</div>
-            <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap">
-              <button class="btn secondary" (click)="payer(m.id)">Payer</button>
-              <span>Joueurs: {{ (m.joueurs||[]).length }}/4</span>
-              <span>Payé: {{ m.estPaye ? 'oui' : 'non' }}</span>
+              <div class="p-8">
+                <!-- Search Input -->
+                <div class="mb-6">
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Matricule</label>
+                  <div class="flex gap-3">
+                    <input 
+                      [(ngModel)]="matricule" 
+                      placeholder="Ex: AG0001, AS00001, L00001"
+                      class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                    <button 
+                      (click)="loadMyMatches()"
+                      class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+                    >
+                      🔍 Chercher
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Error Message -->
+                <div *ngIf="error" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+                  <p class="font-semibold">⚠️ Erreur</p>
+                  <p class="text-sm mt-1">{{ error }}</p>
+                </div>
+
+                <!-- Matches List -->
+                <div *ngIf="myMatches.length === 0 && !error" class="text-center py-12 text-gray-500">
+                  <p class="text-lg">📭 Aucun match trouvé</p>
+                  <p class="text-sm mt-1">Entrez votre matricule pour voir vos matchs</p>
+                </div>
+
+                <div *ngIf="myMatches.length > 0" class="space-y-4">
+                  <div class="text-sm font-semibold text-gray-600 mb-4">{{ myMatches.length }} match(s) trouvé(s)</div>
+                  
+                  <div *ngFor="let m of myMatches; let i = index" 
+                       class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-400 hover:shadow-md transition-all"
+                       [class.bg-blue-50]="m.estPaye"
+                       [class.bg-gray-50]="!m.estPaye">
+                    
+                    <div class="flex justify-between items-start gap-4">
+                      <div class="flex-1">
+                        <h3 class="font-bold text-lg text-gray-800">
+                          📍 {{ m.terrain?.site?.nom }} - {{ m.terrain?.nom }}
+                        </h3>
+                        
+                        <div class="mt-3 grid grid-cols-2 gap-4 text-sm text-gray-600">
+                          <div class="flex items-center gap-2">
+                            <span class="text-lg">📅</span>
+                            <span>{{ m.date }}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="text-lg">⏰</span>
+                            <span>{{ m.heureDebut }} - {{ m.heureFin }}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="text-lg">👥</span>
+                            <span>{{ (m.joueurs||[]).length }} / 4 joueurs</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="text-lg">🏷️</span>
+                            <span [class.text-green-600]="m.typeMatch === 'PUBLIC'" 
+                                  [class.text-purple-600]="m.typeMatch === 'PRIVE'">
+                              {{ m.typeMatch }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="flex flex-col gap-2">
+                        <button 
+                          (click)="payer(m.id)"
+                          [disabled]="m.estPaye"
+                          [class.opacity-50]="m.estPaye"
+                          [class.cursor-not-allowed]="m.estPaye"
+                          class="px-4 py-2 rounded-lg font-semibold transition-all whitespace-nowrap"
+                          [class.bg-green-500]="m.estPaye"
+                          [class.text-white]="m.estPaye"
+                          [class.bg-yellow-500]="!m.estPaye"
+                          [class.text-white]="!m.estPaye"
+                          [class.hover:bg-yellow-600]="!m.estPaye"
+                        >
+                          {{ m.estPaye ? '✅ Payé' : '💳 Payer' }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT SECTION: Créer un match -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow sticky top-8">
+              <div class="bg-gradient-to-r from-green-500 to-green-600 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                  <span>➕</span> Créer Match
+                </h2>
+                <p class="text-green-100 mt-1 text-sm">Organiser un nouveau match</p>
+              </div>
+
+              <div class="p-6">
+                <!-- Matricule -->
+                <div class="mb-4">
+                  <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Matricule</label>
+                  <input 
+                    [(ngModel)]="create.matriculeOrganisateur" 
+                    placeholder="AG0001"
+                    class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-colors text-sm"
+                  />
+                </div>
+
+                <!-- Site -->
+                <div class="mb-4">
+                  <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Site</label>
+                  <select 
+                    [(ngModel)]="selectedSiteId" 
+                    (change)="loadTerrains()"
+                    class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-colors text-sm"
+                  >
+                    <option [ngValue]="null">Choisir...</option>
+                    <option *ngFor="let s of sites" [ngValue]="s.id">{{ s.nom }}</option>
+                  </select>
+                </div>
+
+                <!-- Terrain -->
+                <div class="mb-4">
+                  <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Terrain</label>
+                  <select 
+                    [(ngModel)]="create.terrainId"
+                    class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-colors text-sm"
+                  >
+                    <option [ngValue]="null">Choisir...</option>
+                    <option *ngFor="let t of terrains" [ngValue]="t.id">{{ t.nom }}</option>
+                  </select>
+                </div>
+
+                <!-- Date -->
+                <div class="mb-4">
+                  <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Date</label>
+                  <input 
+                    type="date" 
+                    [(ngModel)]="create.date"
+                    class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-colors text-sm"
+                  />
+                </div>
+
+                <!-- Heure -->
+                <div class="mb-4">
+                  <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Heure début</label>
+                  <input 
+                    type="time" 
+                    [(ngModel)]="create.heureDebut"
+                    class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-colors text-sm"
+                  />
+                </div>
+
+                <!-- Type Match -->
+                <div class="mb-6">
+                  <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Type</label>
+                  <select 
+                    [(ngModel)]="create.typeMatch"
+                    class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-colors text-sm"
+                  >
+                    <option value="PUBLIC">🌍 PUBLIC</option>
+                    <option value="PRIVE">🔒 PRIVÉ</option>
+                  </select>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                  (click)="createMatch()"
+                  class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-all shadow-md"
+                >
+                  ➕ Créer Match
+                </button>
+
+                <!-- Messages -->
+                <div *ngIf="createError" class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded text-sm">
+                  <p class="font-semibold">⚠️ Erreur</p>
+                  <p class="text-xs mt-1">{{ createError }}</p>
+                </div>
+
+                <div *ngIf="createOk" class="mt-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 rounded text-sm">
+                  <p class="font-semibold">✅ Succès</p>
+                  <p class="text-xs mt-1">{{ createOk }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <h3>2) Créer un match</h3>
-        <p style="color:#666; margin-top:-6px">Le backend appliquera les règles métier (délais selon le type de membre, privé/public, etc.).</p>
-
-        <label>Matricule organisateur</label>
-        <input [(ngModel)]="create.matriculeOrganisateur" placeholder="G0001"/>
-
-        <label style="margin-top:10px">Site</label>
-        <select [(ngModel)]="selectedSiteId" (change)="loadTerrains()">
-          <option [ngValue]="null">-- Choisir --</option>
-          <option *ngFor="let s of sites" [ngValue]="s.id">{{ s.nom }}</option>
-        </select>
-
-        <label style="margin-top:10px">Terrain</label>
-        <select [(ngModel)]="create.terrainId">
-          <option [ngValue]="null">-- Choisir --</option>
-          <option *ngFor="let t of terrains" [ngValue]="t.id">{{ t.nom }}</option>
-        </select>
-
-        <label style="margin-top:10px">Date</label>
-        <input type="date" [(ngModel)]="create.date"/>
-
-        <label style="margin-top:10px">Heure de début</label>
-        <input type="time" [(ngModel)]="create.heureDebut"/>
-
-        <label style="margin-top:10px">Type de match</label>
-        <select [(ngModel)]="create.typeMatch">
-          <option value="PUBLIC">PUBLIC</option>
-          <option value="PRIVE">PRIVE</option>
-        </select>
-
-        <button class="btn" style="margin-top:12px" (click)="createMatch()">Créer</button>
-        <div *ngIf="createError" class="error" style="margin-top:12px">{{ createError }}</div>
-        <div *ngIf="createOk" style="margin-top:12px; color:#0a7a0a">{{ createOk }}</div>
       </div>
     </div>
   `

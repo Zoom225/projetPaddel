@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "servers": {
+    "PadelService": {
+      "Name": "PadelService PostgreSQL",
+      "Group": "Servers",
+      "Host": "localhost",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "Username": "padel",
+      "Password": "padel",
+      "SSLMode": "prefer",
+      "OverrideMaintenanceDBName": "postgres",
+      "UsePgPass": false,
+      "ColorBtnBg": "",
+      "OverrideBinaryPath": "",
+      "IconnectionStringParams": "",
+      "Tags": [
+        "Production",
+        "PostgreSQL 16"
+      ],
+      "DBRestrictionList": [],
+      "PreConnect": false,
+      "PreConnectNotification": false,
+      "ConnectNow": true,
+      "SharedUsername": false,
+      "UseSSHTunnel": false,
+      "Name": "PadelService",
+      "Shared": false,
+      "Comment": "Base de donnees Padel Service - PostgreSQL 16"
+    }
+  }
+}

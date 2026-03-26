@@ -1,20 +1,16 @@
 package com.padel.service;
 
-import com.padel.model.Site;
+import com.padel.entity.Site;
 import com.padel.repository.SiteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class SiteService {
-    
-    @Autowired
-    private SiteRepository siteRepository;
+    private final SiteRepository siteRepository;
 
     public List<Site> getAllSites() {
         return siteRepository.findAll();
@@ -29,16 +25,14 @@ public class SiteService {
     }
 
     public Site updateSite(Long id, Site siteDetails) {
-        Site site = siteRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Site non trouvé"));
-        
-        site.setNom(siteDetails.getNom());
-        site.setHeureDebut(siteDetails.getHeureDebut());
-        site.setHeureFin(siteDetails.getHeureFin());
-        site.setDureeMatchMinutes(siteDetails.getDureeMatchMinutes());
-        site.setDureeEntreMatchMinutes(siteDetails.getDureeEntreMatchMinutes());
-        
-        return siteRepository.save(site);
+        return siteRepository.findById(id).map(site -> {
+            site.setNom(siteDetails.getNom());
+            site.setHeureDebut(siteDetails.getHeureDebut());
+            site.setHeureFin(siteDetails.getHeureFin());
+            site.setDureeMatchMinutes(siteDetails.getDureeMatchMinutes());
+            site.setDureeEntreMatchMinutes(siteDetails.getDureeEntreMatchMinutes());
+            return siteRepository.save(site);
+        }).orElseThrow(() -> new RuntimeException("Site not found"));
     }
 
     public void deleteSite(Long id) {
